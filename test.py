@@ -117,8 +117,9 @@ def test():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 menu()
-                        
+
+#start
 def main():
-    
+    test()
 if __name__ == '__main__':
     main()
