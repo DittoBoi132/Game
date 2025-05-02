@@ -57,52 +57,11 @@ def menu():
                     menu = False
                 if rect2.collidepoint(event.pos):
                     menu = False
-
-#game over
+#restart?
 text5 = font.render("RESTART", True, white)
 text6 = font.render("QUIT", True, white)
 
-def gameOver():
-    global option
-    if lives == 0:
-        screen.fill(black)
-        font = pygame.font.SysFont("Times_new_roman", 48)
-        txtsurf = font.render("GAME OVER", True, white)
-        screen.blit(txtsurf, (screen.get_width() //2  - txtsurf.get_width() // 2, screen.get_height() //2  - txtsurf.get_height() // 2))
-        pygame.display.update()
-        pygame.time.delay(3000)
-
-        while option:
-            rect1 = text5.get_rect(topleft = (screen.get_width() //2 - text5.get_width() // 2, screen.get_height() //2 + text4.get_height()))
-            rect2 = text6.get_rect(topleft = (screen.get_width() //2 - text6.get_width() // 2, screen.get_height() //2 - text3.get_height()))
-            screen.fill(black)
-            screen.blit(text5, rect1)
-            pygame.draw.rect(screen, (darkBrown),rect1, 5)
-            screen.blit(text6, rect2)
-            pygame.draw.rect(screen, (darkBrown),rect2, 5)
-            pygame.display.update()
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if rect1.collidepoint(event.pos):
-                        main()
-                        option = False
-                    if rect2.collidepoint(event.pos):
-                        pygame.quit()
-                        sys.exit()
-
-#win
-def win():
-    global option
-    screen.fill(black)
-    font = pygame.font.SysFont("Times_new_roman", 48)
-    txtsurf = font.render("YOU WIN", True, white)
-    screen.blit(txtsurf,(screen.get_width() //2 - txtsurf.get_width() // 2, screen.get_height() //2  - txtsurf.get_height() // 2))
-    pygame.display.update()
-    pygame.time.delay(3000)
-
+def restart():
     while option:
         rect1 = text5.get_rect(topleft = (screen.get_width() //2 - text5.get_width() // 2, screen.get_height() //2 + text4.get_height()))
         rect2 = text6.get_rect(topleft = (screen.get_width() //2 - text6.get_width() // 2, screen.get_height() //2 - text3.get_height()))
@@ -118,11 +77,46 @@ def win():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if rect1.collidepoint(event.pos):
-                    game()
+                    main()
                     option = False
                 if rect2.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
+    
+#game over
+def gameOver():
+    global option
+    if lives == 0:
+        screen.fill(black)
+        font = pygame.font.SysFont("Times_new_roman", 48)
+        txtsurf = font.render("GAME OVER", True, white)
+        screen.blit(txtsurf, (screen.get_width() //2  - txtsurf.get_width() // 2, screen.get_height() //2  - txtsurf.get_height() // 2))
+        pygame.display.update()
+        pygame.time.delay(3000)
+
+        restart()
+
+#win
+def win():
+    global option
+    screen.fill(black)
+    font = pygame.font.SysFont("Times_new_roman", 48)
+    txtsurf = font.render("YOU WIN", True, white)
+    screen.blit(txtsurf,(screen.get_width() //2 - txtsurf.get_width() // 2, screen.get_height() //2  - txtsurf.get_height() // 2))
+    pygame.display.update()
+    pygame.time.delay(3000)
+
+    restart()
+
+#tests
+def test():
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                menu()
                         
 def main():
     
