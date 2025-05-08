@@ -22,18 +22,25 @@ orange = (255,143,0)
 purple = (255, 0, 255)
 brown = (141, 111, 100)
 darkBrown = (91, 74, 68)
+tan = (188, 164, 97)
 
 #variables
-direction = "left"
+direction = "down"
 score = 0
 lives = 1
+collisionF =False
+collisionWL =False
+collisionWR =False
+collisionD =False
 option = True
 pause = False
+isJump = False
+changed = False
+jumpCount = 10
+v = 5
 clock = pygame.time.Clock()
-
-def jump():
-    pass
-    #player.rect.y += 5
+collision = False
+temp = K_DOWN
 
 def crouch():
     pass
@@ -45,26 +52,46 @@ class PLAYER(pygame.sprite.Sprite):
         self.image = pygame.Surface([radius * 2, radius * 2], pygame.SRCALPHA)
         pygame.draw.circle(self.image, color, (radius, radius), radius) 
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = (screen.get_width() //2 , screen.get_height() // 2)
+        self.rect.x, self.rect.y = (50 , screen.get_height()*(3/4) - 30)
 
     def move(self, direction):
+        global isJump, jumpCount, changed
         old_x, old_y = self.rect.x, self.rect.y
         if direction == "right":
-            self.rect.x += 2
+            self.rect.x += 5
         if direction == "left":
-            self.rect.x -= 2
-        if direction == "up" :
-            jump()
+            self.rect.x -= 5
         if direction == "down":
             crouch()
-        print(self.rect.x, self.rect.y)
+        if not(isJump):
+            if direction == "up":
+                isJump = True
+                changed = True
+        else:
+            if isJump and jumpCount >= -10:
+                self.rect.y -= (jumpCount * abs(jumpCount)) * 0.5
+                jumpCount -= 1
+            else:
+                jumpCount = 10
+                isJump = False
+        #print(self.rect.x, self.rect.y)
 
 player = PLAYER(brown, 15)
 
+#blocks
+class BLOCK(pygame.sprite.Sprite):
+    def __init__(self, color, x, y, width, height):
+        super().__init__()
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
 #menu
 font = pygame.font.SysFont("Times_new_roman", 48)
-text1 = font.render("EXIT", True, white)
-text2 = font.render("CONTINUE", True, white)
+text1 = font.render("EXIT", True, black)
+text2 = font.render("CONTINUE", True, black)
 
 def menu():
     menu = True
@@ -146,7 +173,6 @@ def displayScore():
     font = pygame.font.SysFont("Times_new_roman", 12)
     txtsurf = font.render(disScore, True, black)
     screen.blit(txtsurf, (20,35))
-    pygame.display.update()
     
 #display lives
 def displayLives():
@@ -154,7 +180,6 @@ def displayLives():
     font = pygame.font.SysFont("Times_new_roman", 12)
     txtsurf = font.render(disLives, True, black)
     screen.blit(txtsurf, (20,20))
-    pygame.display.update()
     
 #loose life
 def looseLife():
@@ -170,7 +195,43 @@ def scoreGain(num):
         display(Score)
         display(Lives)
         clock.tick(20)
-        
+
+#collide
+def floorCollision():
+    global collisionF, collisionWL
+    if pygame.sprite.spritecollide(player, Floor, False):
+        collisionF = True
+    if pygame.sprite.spritecollide(player, WallL, False):
+        collisionWL = True
+    """
+    if pygame.sprite.spritecollide(player, WallR, False):
+        collisionWR = True
+    if pygame.sprite.spritecollide(player, Door, False):
+        collisionD = True
+    """
+#stages
+def stage1():
+    global colorFill
+    global Floor, WallL
+    colorFill = green
+    floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
+    wall = BLOCK(tan, 0, 0, 10, screen.get_height())
+    Floor = pygame.sprite.Group(floor)
+    WallL = pygame.sprite.Group(wall)
+
+def stage2():
+    global colorFill
+    global Floor, WallL, WallR, Door
+    colorFill = green
+    floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
+    wall = BLOCK(tan, 0, 0, 10, screen.get_height())
+    wallR = BLOCK(tan, 0, 0, 10, screen.get_height())
+    door = BLOCK(black, 0, 0, 10, screen.get_height())
+    Floor = pygame.sprite.Group(floor)
+    WallL = pygame.sprite.Group(wall)
+    WallR = pygame.sprite.Group(wallR)
+    Door = pygame.sprite.Group(door)
+
 #tests
 def test():
     for event in pygame.event.get():
@@ -187,6 +248,8 @@ def main():
     global lives
     global pause
     global direction
+    global collisionF, collisionWL
+    global changed
     
     #start
     starting = True
@@ -205,12 +268,15 @@ def main():
     score = 0
     lives = 1
     running = True
+    player.rect.y = (screen.get_height()*(3/4) - 30)
     while running:
-        screen.fill(green)
+        stage1()
+        screen.fill(colorFill)
         displayLives()
         displayScore()        
         screen.blit(player.image, player.rect)
-        pygame.display.update()
+        Floor.draw(screen)
+        WallL.draw(screen)
     
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -219,21 +285,41 @@ def main():
             if event.type == KEYDOWN:
                 if event.key == K_RIGHT:
                     direction = "right"
+                    temp = K_RIGHT
                 if event.key == K_LEFT:
                     direction = "left"
-                if event.key == K_UP:
-                    direction = "up"
+                    temp = K_LEFT
                 if event.key == K_DOWN:
                     direction = "down"
+                    temp = K_DOWN
+                if not isJump:
+                    if event.key == K_UP:
+                        direction = "up"
                 if event.key == K_ESCAPE:
                     menu()
-        
+
+        #check collision
+        floorCollision()
+
         # Move
         player.move(direction)
-
-    pygame.display.update()
-    pygame.display.flip()  
-    clock.tick(200)
+        if changed:
+            direction = "down"
+            changed = False
+        pygame.display.update()
+        if collisionWL:
+            player.rect.x += 10
+            collisionWL = False
+            direction = "down"
+        if not isJump:
+            if collisionF:
+                pass
+                player.rect.y = screen.get_height()*(3/4) - 30
+                collisionF = False
+        
+        pygame.display.update()
+        clock.tick(30)
                     
 if __name__ == '__main__':
     main()
+
