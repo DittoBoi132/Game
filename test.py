@@ -32,6 +32,7 @@ collisionF =False
 collisionWL =False
 collisionWR =False
 collisionD =False
+collisionBD = False
 option = True
 pause = False
 isJump = False
@@ -41,6 +42,7 @@ v = 5
 clock = pygame.time.Clock()
 collision = False
 temp = K_DOWN
+stageX = 1
 
 def crouch():
     pass
@@ -172,14 +174,14 @@ def displayScore():
     disScore = f"Score: {score}"
     font = pygame.font.SysFont("Times_new_roman", 12)
     txtsurf = font.render(disScore, True, black)
-    screen.blit(txtsurf, (20,35))
+    screen.blit(txtsurf, (20,20))
     
 #display lives
 def displayLives():
     disLives = f"Lives: {lives}"
     font = pygame.font.SysFont("Times_new_roman", 12)
     txtsurf = font.render(disLives, True, black)
-    screen.blit(txtsurf, (20,20))
+    screen.blit(txtsurf, (20,5))
     
 #loose life
 def looseLife():
@@ -198,40 +200,48 @@ def scoreGain(num):
 
 #collide
 def floorCollision():
-    global collisionF, collisionWL
+    global collisionF, collisionWL,collisionWR, collisionD, collisionBD
     if pygame.sprite.spritecollide(player, Floor, False):
         collisionF = True
     if pygame.sprite.spritecollide(player, WallL, False):
         collisionWL = True
-    """
     if pygame.sprite.spritecollide(player, WallR, False):
         collisionWR = True
     if pygame.sprite.spritecollide(player, Door, False):
         collisionD = True
-    """
+    if pygame.sprite.spritecollide(player, BackDoor, False):
+        collisionBD = True
+        
 #stages
-def stage1():
+def stage():
     global colorFill
-    global Floor, WallL
-    colorFill = green
-    floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
-    wall = BLOCK(tan, 0, 0, 10, screen.get_height())
-    Floor = pygame.sprite.Group(floor)
-    WallL = pygame.sprite.Group(wall)
-
-def stage2():
-    global colorFill
-    global Floor, WallL, WallR, Door
-    colorFill = green
-    floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
-    wall = BLOCK(tan, 0, 0, 10, screen.get_height())
-    wallR = BLOCK(tan, 0, 0, 10, screen.get_height())
-    door = BLOCK(black, 0, 0, 10, screen.get_height())
+    global Floor, WallL, WallR, Door, BackDoor
+    global stageX
+    if stageX == 1:
+        colorFill = green
+        floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
+        wall = BLOCK(tan, 0, 0, 10, screen.get_height())
+        wallR = BLOCK(tan, screen.get_width(), 0, 10, screen.get_height())
+        door = BLOCK(black, screen.get_width()-10, screen.get_height()*(3/4)-50, 10, 50)
+        backDoor = BLOCK(tan, 0, 0, 0, 0)
+        if not isJump:
+            player.rect.y = (screen.get_height()*(3/4) - 30)
+            
+    if stageX == 2:
+        colorFill = cyan
+        floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
+        wall = BLOCK(tan, 0, 0, 10, screen.get_height())
+        wallR = BLOCK(tan, screen.get_width(), 0, 10, screen.get_height())
+        door = BLOCK(black, screen.get_width()-10, screen.get_height()*(3/4)-50, 10, 50)
+        backDoor = BLOCK(black, 0, screen.get_height()*(3/4)-50, 10, 50)
+        if not isJump:
+            player.rect.y = (screen.get_height()*(3/4) - 30)
     Floor = pygame.sprite.Group(floor)
     WallL = pygame.sprite.Group(wall)
     WallR = pygame.sprite.Group(wallR)
     Door = pygame.sprite.Group(door)
-
+    BackDoor = pygame.sprite.Group(backDoor)
+    
 #tests
 def test():
     for event in pygame.event.get():
@@ -244,11 +254,11 @@ def test():
 
 #start         
 def main():
-    global score
-    global lives
+    global score, stageX
+    global lives, colorFill
     global pause
     global direction
-    global collisionF, collisionWL
+    global collisionF, collisionWL, collisionWR, collisionD, collisionBD
     global changed
     
     #start
@@ -270,13 +280,16 @@ def main():
     running = True
     player.rect.y = (screen.get_height()*(3/4) - 30)
     while running:
-        stage1()
+        stage()
         screen.fill(colorFill)
         displayLives()
         displayScore()        
         screen.blit(player.image, player.rect)
         Floor.draw(screen)
         WallL.draw(screen)
+        WallR.draw(screen)
+        Door.draw(screen)
+        BackDoor.draw(screen)
     
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -307,10 +320,24 @@ def main():
             direction = "down"
             changed = False
         pygame.display.update()
+
+        #collision
         if collisionWL:
             player.rect.x += 10
             collisionWL = False
             direction = "down"
+        if collisionWR:
+            player.rect.x -= 10
+            collisionWR = False
+            direction = "down"
+        if collisionD:
+            stageX += 1
+            player.rect.x, player.rect.y = (15 , screen.get_height()*(3/4) - 30)
+            collisionD = False
+        if collisionBD:
+            stageX -= 1
+            player.rect.x, player.rect.y = (screen.get_width()-50, screen.get_height()*(3/4) - 30)
+            collisionBD = False
         if not isJump:
             if collisionF:
                 pass
@@ -322,4 +349,5 @@ def main():
                     
 if __name__ == '__main__':
     main()
+
 
