@@ -35,6 +35,7 @@ collisionD =False
 collisionBD = False
 collisionD2 = False
 collisionF2 = False
+collisionBD2 = False
 option = True
 pause = False
 isJump = False
@@ -242,7 +243,7 @@ def coinGrab(coin):
 def stage():
     global colorFill
     global Floor,WallL,WallR,Door,BackDoor,Floor2,Door2,BackDoor2
-    global stageX
+    global stageX, fall, isJump, jumpCount
     if stageX == 1:
         colorFill = green
         floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
@@ -253,10 +254,10 @@ def stage():
         floor2 = BLOCK(tan, 0, 0, 0, 0)
         door2 = BLOCK(tan, 0, 0, 0, 0)
         backDoor2 = BLOCK(tan, 0, 0, 0, 0)
-        if not isJump:
-            player.rect.y = (screen.get_height()*(3/4) - 30)
+        def fall():
+            pass
             
-    if stageX == 2:
+    if stageX == 4:
         colorFill = cyan
         floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
         wall = BLOCK(tan, 0, 0, 10, screen.get_height())
@@ -266,10 +267,10 @@ def stage():
         floor2 = BLOCK(tan, 0, 0, 0, 0)
         door2 = BLOCK(tan, 0, 0, 0, 0)
         backDoor2 = BLOCK(tan, 0, 0, 0, 0)
-        if not isJump:
-            player.rect.y = (screen.get_height()*(3/4) - 30)
+        def fall():
+            pass
             
-    if stageX == 3:
+    if stageX == 2:
         colorFill = yellow
         floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
         floor2 = BLOCK(tan, 300, screen.get_height()*(3/4)-150, screen.get_width()-300, 20)
@@ -279,9 +280,13 @@ def stage():
         backDoor = BLOCK(black, 0, screen.get_height()*(3/4)-50, 10, 50)
         door2 = BLOCK(black, screen.get_width()-10, screen.get_height()*(3/4)-200, 10, 50)
         backDoor2 = BLOCK(tan, 0, 0, 0, 0)
-        if not isJump:
-            player.rect.y = (screen.get_height()*(3/4) - 30)
-    if stageX == 4:
+        def fall():
+            global isJump, jumpCount
+            if not isJump and player.rect.y <= screen.get_height()*(3/4)-180 and player.rect.x <= 280:
+                isJump = True
+                jumpCount = 0
+
+    if stageX == 3:
         colorFill = orange
         floor = BLOCK(tan, 0, screen.get_height()*(3/4), screen.get_width(), screen.get_height()*(3/4))
         floor2 = BLOCK(tan, 0, screen.get_height()*(3/4)-150, screen.get_width(), 20)
@@ -291,8 +296,8 @@ def stage():
         door2 =  BLOCK(tan, 0, 0, 0, 0)
         backDoor = BLOCK(black, 0, screen.get_height()*(3/4)-50, 10, 50)
         backDoor2 = BLOCK(black, 0, screen.get_height()*(3/4)-200, 10, 50)
-        if not isJump:
-            player.rect.y = (screen.get_height()*(3/4) - 30)
+        def fall():
+            pass
             
     Floor = pygame.sprite.Group(floor)
     Floor2 = pygame.sprite.Group(floor2)
@@ -320,7 +325,7 @@ def main():
     global pause
     global direction
     global collisionF, collisionWL, collisionWR, collisionD, collisionBD,collisionF2,collisionD2,collisionBD2
-    global changed, isJump
+    global changed, isJump, jumpCount, fall
     
     #start
     starting = True
@@ -387,7 +392,14 @@ def main():
 
         #collision
         if collisionF2:
+            if player.rect.y >= screen.get_height()*(3/4)-180:
+                player.rect.y = screen.get_height()*(3/4)-181
+                isJump = False
+            elif player.rect.y <= screen.get_height()*(3/4)-180:
+                isJump = True
+                jumpCount = 0
             collisionF2 = False
+        fall()
         if collisionWL:
             player.rect.x += 10
             collisionWL = False
@@ -408,13 +420,19 @@ def main():
             stageX -= 1
             player.rect.x, player.rect.y = (screen.get_width()-50, screen.get_height()*(3/4) - 30)
             collisionBD = False
-        if not isJump:
-            if collisionF:
-                player.rect.y = screen.get_height()*(3/4) - 30
-                collisionF = False
+        if collisionBD2:
+            stageX -= 1
+            player.rect.x, player.rect.y = (screen.get_width()-50, screen.get_height()*(3/4) - 180)
+            collisionBD2 = False
+        if collisionF:
+            isJump = False
+            player.rect.y = screen.get_height()*(3/4)-30
+            collisionF = False
         
         pygame.display.update()
         clock.tick(30)
                     
 if __name__ == '__main__':
     main()
+
+
