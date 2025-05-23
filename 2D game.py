@@ -7,7 +7,7 @@ pygame.init()
 
 #screen
 screen = pygame.display.set_mode((800,600),RESIZABLE)
-pygame.display.set_caption("test")
+pygame.display.set_caption("2D game")
 
 #colours
 white = (255,255,255)
@@ -37,14 +37,10 @@ collisionD2 = False
 collisionF2 = False
 collisionBD2 = False
 option = True
-pause = False
 isJump = False
 changed = False
 jumpCount = 10
-v = 5
 clock = pygame.time.Clock()
-collision = False
-temp = K_DOWN
 stageX = 1
 
 def crouch():
@@ -76,10 +72,10 @@ class PLAYER(pygame.sprite.Sprite):
             if isJump and jumpCount >= -10:
                 self.rect.y -= (jumpCount * abs(jumpCount)) * 0.5
                 jumpCount -= 1
+                print(player.rect.x,player.rect.y)
             else:
                 jumpCount = 10
                 isJump = False
-        #print(self.rect.x, self.rect.y)
 
 player = PLAYER(brown, 15)
 
@@ -133,14 +129,15 @@ def menu():
                     menu = False
                 if rect2.collidepoint(event.pos):
                     menu = False
-#restart?
+#restart
 text5 = font.render("RESTART", True, white)
 text6 = font.render("QUIT", True, white)
 
 def restart():
+    global option
     while option:
-        rect1 = text5.get_rect(topleft = (screen.get_width() //2 - text5.get_width() // 2, screen.get_height() //2 + text4.get_height()))
-        rect2 = text6.get_rect(topleft = (screen.get_width() //2 - text6.get_width() // 2, screen.get_height() //2 - text3.get_height()))
+        rect1 = text5.get_rect(topleft = (screen.get_width() //2 - text5.get_width() // 2, screen.get_height() //2 + text5.get_height()))
+        rect2 = text6.get_rect(topleft = (screen.get_width() //2 - text6.get_width() // 2, screen.get_height() //2 - text6.get_height()))
         screen.fill(black)
         screen.blit(text5, rect1)
         pygame.draw.rect(screen, (darkBrown),rect1, 5)
@@ -161,7 +158,6 @@ def restart():
     
 #game over
 def gameOver():
-    global option
     if lives == 0:
         screen.fill(black)
         font = pygame.font.SysFont("Times_new_roman", 48)
@@ -174,7 +170,6 @@ def gameOver():
 
 #win
 def win():
-    global option
     screen.fill(black)
     font = pygame.font.SysFont("Times_new_roman", 48)
     txtsurf = font.render("YOU WIN", True, white)
@@ -239,6 +234,30 @@ def coinGrab(coin):
     if pygame.sprite.spriteccollide(player, coin, False):
         scoreGain(5)
 
+#fall after hits floor
+count = 0
+def reFall():
+    global count
+    while count != 0:
+        if count == 1:
+            player.rect.y = 298
+            count += 1
+            print(player.rect.y)
+        elif count == 2:
+            player.rect.y = 330
+            count+= 1
+            print(player.rect.y)
+        elif count == 3:
+            player.rect.y = 370
+            count += 1
+            print(player.rect.y)
+        elif count == 4:
+            player.rect.y = screen.get_height()*(3/4) - 30
+            count = 0
+            print(player.rect.y)
+        pygame.display.update()
+        clock.tick(30)
+    
 #stages
 def stage():
     global colorFill
@@ -282,9 +301,10 @@ def stage():
         backDoor2 = BLOCK(tan, 0, 0, 0, 0)
         def fall():
             global isJump, jumpCount
-            if not isJump and player.rect.y <= screen.get_height()*(3/4)-180 and player.rect.x <= 280:
+            if not isJump and player.rect.y < screen.get_height()*(3/4) - 30 and player.rect.x <= 280:
                 isJump = True
                 jumpCount = 0
+                print("FALLING")
 
     if stageX == 3:
         colorFill = orange
@@ -307,7 +327,7 @@ def stage():
     Door2 = pygame.sprite.Group(door2)
     BackDoor = pygame.sprite.Group(backDoor)
     BackDoor2 = pygame.sprite.Group(backDoor2)
-    
+
 #tests
 def test():
     for event in pygame.event.get():
@@ -316,14 +336,13 @@ def test():
             sys.exit()
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
-                menu()
+                menu()      
 
 #start         
 def main():
     global score, stageX
     global lives, colorFill
-    global pause
-    global direction
+    global direction, count
     global collisionF, collisionWL, collisionWR, collisionD, collisionBD,collisionF2,collisionD2,collisionBD2
     global changed, isJump, jumpCount, fall
     
@@ -341,10 +360,11 @@ def main():
                 if rect.collidepoint(event.pos):
                     starting = False
                     
-    score = 0
-    lives = 1
+    #start variables        
+    n = 1
     running = True
     player.rect.y = (screen.get_height()*(3/4) - 30)
+    
     while running:
         stage()
         screen.fill(colorFill)
@@ -367,16 +387,15 @@ def main():
             if event.type == KEYDOWN:
                 if event.key == K_RIGHT:
                     direction = "right"
-                    temp = K_RIGHT
                 if event.key == K_LEFT:
                     direction = "left"
-                    temp = K_LEFT
                 if event.key == K_DOWN:
                     direction = "down"
-                    temp = K_DOWN
                 if not isJump:
                     if event.key == K_UP:
                         direction = "up"
+                        print("")
+                        print("JUMPS")
                 if event.key == K_ESCAPE:
                     menu()
 
@@ -393,12 +412,14 @@ def main():
         #collision
         if collisionF2:
             if player.rect.y >= screen.get_height()*(3/4)-180:
-                player.rect.y = screen.get_height()*(3/4)-181
+                player.rect.y = screen.get_height()*(3/4)-180
                 isJump = False
-            elif player.rect.y <= screen.get_height()*(3/4)-180:
-                isJump = True
-                jumpCount = 0
             collisionF2 = False
+        elif player.rect.y == 330 and isJump and ((player.rect.x >= 300 and stageX == 2) or stageX ==3):
+            print("HITS BOTTOM OF FLOOR")
+            count = 1
+            reFall()
+            isJump = False
         fall()
         if collisionWL:
             player.rect.x += 10
@@ -412,6 +433,9 @@ def main():
             stageX += 1
             player.rect.x, player.rect.y = (15 , screen.get_height()*(3/4) - 30)
             collisionD = False
+            if stageX == 5:
+                running = False
+                win()
         if collisionD2:
             stageX += 1
             player.rect.x, player.rect.y = (15 , screen.get_height()*(3/4) - 180)
@@ -431,8 +455,6 @@ def main():
         
         pygame.display.update()
         clock.tick(30)
-                    
+        
 if __name__ == '__main__':
     main()
-
-
